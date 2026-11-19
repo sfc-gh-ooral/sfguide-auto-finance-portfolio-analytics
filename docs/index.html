@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="snowflake-source" content="cortex-agent-authored" />
+  <meta name="description" content="Auto finance portfolio analytics on Snowflake: vintage losses, roll rates, a ranked collections queue, dealer first-payment defaults, and plain-English questions over one semantic view. A Snowflake example on synthetic data." />
+  <title>Auto Finance Portfolio Analytics · Snowflake example</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2300A396'/%3E%3Cpath d='M8 21a8 8 0 1 1 16 0' stroke='%23062019' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3Cpath d='M16 21l5-6' stroke='%23062019' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <script type="application/json" id="snowflake-report-metadata">
+  {
+    "generated": "2026-11-19",
+    "intent": "GitHub Pages landing page for the Auto Finance Portfolio Analytics Snow Pack",
+    "dataSources": [
+      { "type": "file", "path": "docs/images/*.jpg", "notes": "Screenshots of the hosted Sample-mode example, captured by scripts/capture-screenshots.mjs" },
+      { "type": "file", "path": "data/aggregates.json", "notes": "Synthetic data from scripts/generate-data.mjs; figures quoted on this page come from it or from captured Live runs" }
+    ],
+    "sections": [
+      { "id": "problem", "title": "The problem" },
+      { "id": "walkthrough", "title": "Walkthrough", "producerNotes": "Re-run npm run build:example and npm run capture after UI changes." },
+      { "id": "capabilities", "title": "Snowflake capabilities" },
+      { "id": "start", "title": "Get started" }
+    ]
+  }
+  </script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --paper: light-dark(#F6F4EE, #0A1218);
+      --paper-2: light-dark(#EFECE3, #0F1A22);
+      --card: light-dark(#FFFFFF, #11202B);
+      --ink: light-dark(#0B1B2B, #E9F1EE);
+      --ink-2: light-dark(#44566A, #A9BCC6);
+      --ink-3: light-dark(#7A8A99, #6F8796);
+      --rule: light-dark(#DCD7CA, #1E3443);
+      --teal: light-dark(#007F75, #3FD3C4);
+      --lime: #9BDB3E;
+      --amber: light-dark(#A86A00, #FFC45C);
+      --coral: light-dark(#C83A2E, #FF8A7D);
+      --night: #0A1622;
+      --grad: linear-gradient(110deg, #00A396 0%, #2FC28A 45%, #9BDB3E 100%);
+      --serif: "Iowan Old Style", "Charter", "Palatino Linotype", Palatino, Georgia, serif;
+      --sans: "Avenir Next", "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
+    img, svg { max-width: 100%; height: auto; }
+    a { color: var(--teal); text-underline-offset: 3px; }
+    .wrap { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 clamp(18px, 4vw, 40px); }
+    .mono { font-family: var(--mono); font-size: 0.86em; }
+    .eyebrow { font: 700 12px/1 var(--sans); letter-spacing: .18em; text-transform: uppercase; color: var(--teal); }
+
+    /* top bar */
+    .top { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--rule); }
+    .top .wrap { display: flex; align-items: center; gap: 16px; height: 60px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--ink); text-decoration: none; }
+    .brand i { width: 30px; height: 30px; border-radius: 8px; background: var(--grad); display: inline-flex; align-items: center; justify-content: center; }
+    .brand small { font-weight: 500; color: var(--ink-3); }
+    .top nav { margin-left: auto; display: flex; gap: 18px; align-items: center; font-size: 14px; }
+    .top nav a { color: var(--ink-2); text-decoration: none; }
+    .top nav a:hover { color: var(--ink); }
+    @media (max-width: 720px) { .top nav .opt { display: none; } .brand small { display: none; } }
+
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 999px; font-weight: 700; font-size: 15px; text-decoration: none; border: 1.5px solid var(--ink); color: var(--ink); background: transparent; transition: transform .15s ease, box-shadow .15s ease; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-go { background: var(--grad); color: #062019; border-color: transparent; box-shadow: 0 10px 24px -12px rgba(0,163,150,.9); }
+    .top .btn { padding: 8px 14px; font-size: 13px; }
+
+    /* hero */
+    .hero { padding: clamp(40px, 7vw, 88px) 0 32px; position: relative; overflow: hidden; }
+    .hero::after { content: ""; position: absolute; right: -10%; top: -20%; width: 60vw; height: 60vw; max-width: 760px; max-height: 760px; border-radius: 50%; background: radial-gradient(closest-side, rgba(0,163,150,.18), transparent); pointer-events: none; }
+    .hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: clamp(28px, 5vw, 64px); align-items: center; position: relative; z-index: 1; }
+    @media (max-width: 960px) { .hero-grid { grid-template-columns: 1fr; } }
+    h1 { font: 600 clamp(38px, 6vw, 68px)/1.02 var(--serif); letter-spacing: -0.02em; margin: 14px 0 18px; }
+    h1 em { font-style: italic; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .lede { font-size: clamp(17px, 2vw, 20px); color: var(--ink-2); max-width: 36em; }
+    .cta { display: flex; flex-wrap: wrap; gap: 12px; margin: 26px 0 22px; }
+    .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+    .facts div { padding: 14px 14px 14px 0; }
+    .facts div + div { padding-left: 14px; border-left: 1px solid var(--rule); }
+    .facts b { display: block; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+    .facts span { font-size: 14px; }
+    @media (max-width: 560px) { .facts { grid-template-columns: 1fr; } .facts div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); } }
+    .shot { margin: 0; border-radius: 16px; overflow: hidden; background: var(--night); box-shadow: 0 2px 6px rgba(0,0,0,.08), 0 30px 60px -30px rgba(11,27,43,.55); border: 1px solid var(--rule); }
+    .shot .bar { display: flex; gap: 6px; padding: 9px 12px; background: #0E1E2A; }
+    .shot .bar span { width: 10px; height: 10px; border-radius: 50%; background: #2A4050; }
+    .shot img { display: block; width: 100%; }
+    .tilt { transform: perspective(1400px) rotateY(-6deg) rotateX(2deg); transition: transform .4s ease; }
+    .tilt:hover { transform: none; }
+    @media (max-width: 960px) { .tilt { transform: none; } }
+
+    .notice { margin: 28px 0 0; padding: 14px 18px; border-radius: 12px; border: 1px dashed var(--amber); color: var(--ink-2); font-size: 14px; background: color-mix(in srgb, var(--amber) 7%, transparent); }
+    .notice strong { color: var(--amber); }
+
+    section { padding: clamp(48px, 7vw, 96px) 0; }
+    h2 { font: 600 clamp(30px, 4vw, 46px)/1.08 var(--serif); letter-spacing: -0.015em; margin: 10px 0 16px; }
+    h3 { font: 700 21px/1.25 var(--sans); margin: 8px 0 8px; letter-spacing: -0.01em; }
+    .muted { color: var(--ink-2); }
+
+    /* problem */
+    .problem { background: var(--paper-2); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+    .cols3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 22px; margin-top: 28px; }
+    .persona { background: var(--card); border: 1px solid var(--rule); border-radius: 16px; padding: 22px; }
+    .persona .q { font: italic 19px/1.4 var(--serif); margin: 10px 0 0; }
+    .big { font: 600 clamp(40px, 5.2vw, 64px)/1.05 var(--serif); background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    /* road walkthrough */
+    .road { position: relative; margin-top: 40px; }
+    .road::before { content: ""; position: absolute; left: 27px; top: 10px; bottom: 10px; width: 6px; border-radius: 6px; background: repeating-linear-gradient(180deg, var(--lime) 0 26px, transparent 26px 46px), var(--night); }
+    .stop { position: relative; display: grid; grid-template-columns: 60px 1fr; gap: 22px; margin-bottom: clamp(36px, 6vw, 64px); }
+    .pin { width: 60px; height: 60px; border-radius: 50%; background: var(--night); color: var(--lime); display: flex; align-items: center; justify-content: center; font: 700 22px/1 var(--serif); border: 4px solid var(--paper); box-shadow: 0 0 0 2px var(--lime); position: relative; z-index: 1; }
+    .stop-body { display: grid; grid-template-columns: 0.85fr 1.4fr; gap: 28px; align-items: start; }
+    @media (max-width: 960px) { .stop-body { grid-template-columns: 1fr; } }
+    @media (max-width: 560px) { .road::before { left: 19px; } .stop { grid-template-columns: 44px 1fr; gap: 14px; } .pin { width: 44px; height: 44px; font-size: 18px; } }
+    .tag { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; font: 700 12px/1.3 var(--sans); color: var(--teal); background: color-mix(in srgb, var(--teal) 10%, transparent); border: 1px solid color-mix(in srgb, var(--teal) 30%, transparent); margin: 4px 6px 0 0; }
+    figure figcaption { font-size: 14px; color: var(--ink-2); padding: 12px 2px 0; }
+    figure figcaption b { color: var(--ink); }
+    .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 26px; margin-top: 30px; }
+
+    /* capabilities */
+    .table-wrap { overflow-x: auto; margin-top: 26px; border: 1px solid var(--rule); border-radius: 16px; background: var(--card); }
+    table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 15px; }
+    th, td { text-align: left; padding: 14px 16px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+    th { font: 700 12px/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); background: var(--paper-2); }
+    tr:last-child td { border-bottom: 0; }
+
+    /* start */
+    .start-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px; margin-top: 26px; }
+    .panel { background: var(--card); border: 1px solid var(--rule); border-radius: 16px; padding: 24px; }
+    pre { margin: 12px 0 0; padding: 16px; border-radius: 12px; background: var(--night); color: #C9EFE5; overflow-x: auto; font: 13px/1.6 var(--mono); }
+    ol { padding-left: 20px; } li { margin: 6px 0; }
+
+    footer { border-top: 1px solid var(--rule); padding: 36px 0 60px; font-size: 14px; color: var(--ink-2); }
+    footer .wrap { display: grid; gap: 10px; }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="#top"><i aria-hidden="true"><svg width="18" height="18" viewBox="0 0 32 32"><path d="M6 22a10 10 0 1 1 20 0" stroke="#062019" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M16 22l6-7" stroke="#062019" stroke-width="3.5" stroke-linecap="round"/></svg></i>Odometer <small>· a Snowflake example</small></a>
+      <nav aria-label="Page">
+        <a class="opt" href="#walkthrough">Walkthrough</a>
+        <a class="opt" href="#capabilities">Capabilities</a>
+        <a class="opt" href="#start">Get started</a>
+        <a href="https://github.com/sfc-gh-ooral/sfguide-auto-finance-portfolio-analytics">GitHub</a>
+        <a class="btn btn-go" href="./try/">Try it</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <div class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <div class="eyebrow">Banking · Auto finance · Portfolio analytics</div>
+          <h1>See the whole lending book. <em>Act on what moves.</em></h1>
+          <p class="lede">At an auto lender, the risk, collections, dealer, and finance teams each watch a different slice of the same loans. This example puts originations, delinquency, vintage losses, a ranked collections queue, and dealer performance on one governed semantic layer in Snowflake. It adds plain-English questions and AI summaries that suggest a next step, while a person makes the call.</p>
+          <div class="cta">
+            <a class="btn btn-go" href="./try/">Try the example in your browser →</a>
+            <a class="btn" href="https://github.com/sfc-gh-ooral/sfguide-auto-finance-portfolio-analytics">View the repository</a>
+          </div>
+          <div class="facts">
+            <div><b>Prerequisites</b><span>None for the browser example. Live mode: a Snowflake account with Cortex AI in your region</span></div>
+            <div><b>Time</b><span>2 minutes to explore; about 15 minutes to deploy live</span></div>
+            <div><b>Expected cost</b><span>Setup runs about a minute on an XSMALL warehouse, plus small Cortex AI charges per question or summary</span></div>
+          </div>
+        </div>
+        <figure class="shot tilt"><div class="bar" aria-hidden="true"><span></span><span></span><span></span></div>
+          <img src="images/01-overview.jpg" width="1600" height="1000" alt="Odometer portfolio overview: 460,424 funded contracts, $12.02B open balance, 6,531 accounts in the collections queue, October 2026 KPIs including 2.08% 30+ DPD and 2.28% annualized charge-offs, and trend charts" /></figure>
+      </div>
+      <div class="wrap"><p class="notice"><strong>Synthetic data, illustrative logic.</strong> Every dealer, borrower, and number here is generated by the repository. Not production, credit, collections, regulatory, or compliance advice. Not an official Snowflake product.</p></div>
+    </div>
+
+    <section class="problem" id="problem">
+      <div class="wrap">
+        <div class="eyebrow">The problem</div>
+        <h2>Four teams, one book, four versions of the numbers.</h2>
+        <p class="muted" style="max-width:46em">Each team's spreadsheet defines delinquency rate, charge-offs, and first-payment default a little differently. Risk sees a vintage turning bad weeks after it started. Collectors work accounts in the order they arrived. Dealer managers are the last to hear about a problem dealer. With one governed definition of each metric on contract-level data, every team acts on the same signal early.</p>
+        <div class="cols3">
+          <div class="persona"><div class="eyebrow">Credit risk analyst</div><p class="q">&ldquo;Is a vintage or a credit band going bad, and is it the mix or the performance?&rdquo;</p></div>
+          <div class="persona"><div class="eyebrow">Collections manager</div><p class="q">&ldquo;Which early-delinquency accounts should my team call first today?&rdquo;</p></div>
+          <div class="persona"><div class="eyebrow">Dealer relationship manager</div><p class="q">&ldquo;Which dealers are sending us loans that miss the first payment?&rdquo;</p></div>
+        </div>
+        <div class="cols3" style="margin-top:34px">
+          <div><div class="big">4.0% → 10.1%</div><p class="muted">30+ DPD in the 580-619 FICO band over 12 months, while every other band eases. The origination mix barely moved.</p></div>
+          <div><div class="big">12.0% vs 2.3%</div><p class="muted">Cumulative charge-offs at month 15 for used 84-month loans booked Feb-Apr 2025, against the same loan type booked in other months.</p></div>
+          <div><div class="big">22.9%</div><p class="muted">First-payment defaults at one dealer in 2026, against 1.7% for the whole book. All figures come from this synthetic data set.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="walkthrough">
+      <div class="wrap">
+        <div class="eyebrow">Walkthrough</div>
+        <h2>Four stops from a signal to a decision</h2>
+        <div class="road">
+          <div class="stop">
+            <div class="pin" aria-hidden="true">1</div>
+            <div class="stop-body">
+              <div>
+                <h3>Credit risk finds where losses come from</h3>
+                <p class="muted">Cumulative charge-offs by funding quarter show the Feb-Apr 2025 vintage running hot. Splitting out used-vehicle 84-month loans shows where the problem sits. The roll-rate matrix shows how accounts move between delinquency buckets each month: about half of 30-59 DPD accounts roll to 60-89, and 40% of 90+ accounts charge off.</p>
+                <span class="tag">Semantic View</span><span class="tag">Contract-level data</span>
+              </div>
+              <figure class="shot"><img src="images/02-credit-risk.jpg" width="1600" height="1000" loading="lazy" alt="Credit and portfolio risk screen: cumulative charge-off curves by vintage with Feb-Apr 2025 highest, a segment chart where used 84-month loans booked Feb-Apr 2025 reach 12% against 2.3%, a roll-rate matrix, and a steady origination mix" />
+                <figcaption><b>Vintages, segments, roll rates, mix.</b> Every series is computed from the same month-end payment rows the semantic view governs.</figcaption></figure>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="pin" aria-hidden="true">2</div>
+            <div class="stop-body">
+              <div>
+                <h3>Collections works the riskiest accounts first</h3>
+                <p class="muted">The queue lists every account 30 to 89 days past due at month-end. A transparent roll-risk score ranks them from days past due, credit band, LTV, term, and loan age. When the collector opens an account, AI_COMPLETE writes a call summary grounded only in that account's figures. The collector then assigns the account or records a promise to pay, and the decision is saved to a Snowflake table.</p>
+                <span class="tag">AI_COMPLETE</span><span class="tag">Structured output</span><span class="tag">Human decision</span>
+              </div>
+              <figure class="shot"><img src="images/04-account-summary.jpg" width="1600" height="1000" loading="lazy" alt="Account view for a synthetic borrower 60-89 days past due: roll-risk points that add to 91, a month-end status strip, an AI call summary, and a form to assign a collector or record a promise to pay" />
+                <figcaption><b>Account view.</b> Score parts, payment history, an AI call summary, and the collector's decision. Nothing is sent to the borrower.</figcaption></figure>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="pin" aria-hidden="true">3</div>
+            <div class="stop-body">
+              <div>
+                <h3>Dealer performance catches a first-payment-default cluster</h3>
+                <p class="muted">One dealer's loans started missing their first payment in 2026, and the watchlist puts that dealer at the top. The drill-down shows the jump by funded month. AI_COMPLETE writes a brief for the relationship manager, grounded in the dealer's figures and the book average. One click assigns a review.</p>
+                <span class="tag">AI_COMPLETE</span><span class="tag">Semantic View</span>
+              </div>
+              <figure class="shot"><img src="images/05-dealer-fpd.jpg" width="1600" height="1000" loading="lazy" alt="Dealer drill-down for Harbor Pre-Owned: first-payment default rate by funded month jumping above 20% in 2026, a Flag for review form, and an AI narrative headline reading first-payment defaults jumped to 22.9% in 2026" />
+                <figcaption><b>Dealer drill-down.</b> First-payment defaults by funded month, a review assignment, and an AI narrative.</figcaption></figure>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="pin" aria-hidden="true">4</div>
+            <div class="stop-body">
+              <div>
+                <h3>Anyone can ask the portfolio</h3>
+                <p class="muted">A Cortex Agent sends plain-English questions to Cortex Analyst over the AUTO_FINANCE_SV semantic view. Delinquency rate, charge-offs, look-to-book, and first-payment default are each defined once, with owners and synonyms. Verified queries pin the SQL for common questions, so answers match the charts on the other screens. Each answer shows the SQL it ran.</p>
+                <span class="tag">Cortex Agents</span><span class="tag">Cortex Analyst</span><span class="tag">Verified queries</span>
+              </div>
+              <figure class="shot"><img src="images/06-ask.jpg" width="1600" height="1000" loading="lazy" alt="Ask screen: answer to which dealers have the highest first-payment default rate in 2026, Harbor Pre-Owned at 22.9% followed by dealers near 5%, a bar chart, and a Verified query used badge" />
+                <figcaption><b>Ask the portfolio.</b> Answers captured from a Live run; the hosted example labels them as samples.</figcaption></figure>
+            </div>
+          </div>
+        </div>
+
+        <h3 style="margin-top:20px">More from the example</h3>
+        <div class="gallery">
+          <figure class="shot"><img src="images/03-collections-queue.jpg" width="1600" height="1000" loading="lazy" alt="Collections work queue: 6,531 accounts in queue, the 400 highest roll-risk accounts listed with status, score, balance, a 12-month status strip, loan details, and dealer" />
+            <figcaption><b>Collections queue.</b> 6,531 early-delinquency accounts at the October 2026 month-end, highest roll-risk first.</figcaption></figure>
+          <figure class="shot"><img src="images/08-dealers.jpg" width="1600" height="1000" loading="lazy" alt="Dealer performance list with a watchlist of the highest first-payment-default dealer and the biggest year-over-year rises in decline rate, and a sortable table of 1,500 dealers" />
+            <figcaption><b>Dealer performance.</b> Funnel, first-payment defaults, and the year-over-year change in decline rate for 1,500 dealers.</figcaption></figure>
+          <figure class="shot"><img src="images/07-ask-reasoning.jpg" width="1600" height="1000" loading="lazy" alt="Ask screen while an answer is in progress, with staged steps: planning with Cortex Agent, matching verified queries, generating SQL with Cortex Analyst" />
+            <figcaption><b>Visible steps.</b> Each AI call shows the stages the Live path runs. In Live runs, Ask took about 8 to 22 seconds and summaries about 5 seconds.</figcaption></figure>
+          <figure class="shot"><img src="images/09-overview-dark.jpg" width="1600" height="1000" loading="lazy" alt="The portfolio overview in dark mode" />
+            <figcaption><b>Light and dark.</b> The app follows your system theme and has a toggle.</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="problem" id="capabilities">
+      <div class="wrap">
+        <div class="eyebrow">Under the hood</div>
+        <h2>Snowflake capabilities, as used in Live mode</h2>
+        <p class="muted">Every capability below ran against the example's objects in Live mode. All are generally available.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Capability</th><th>What it does here</th><th>Docs</th></tr></thead>
+            <tbody>
+              <tr><td><b>Semantic View</b> with verified queries</td><td><span class="mono">AUTO_FINANCE_SV</span>: applications, dealers, contracts, month-end payments, and targets; 17 metrics with owners and synonyms; seven verified queries</td><td><a href="https://docs.snowflake.com/en/sql-reference/sql/create-semantic-view">CREATE SEMANTIC VIEW</a></td></tr>
+              <tr><td><b>Cortex Analyst</b></td><td>Turns questions into SQL over the semantic view (as an agent tool)</td><td><a href="https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst">Cortex Analyst</a></td></tr>
+              <tr><td><b>Cortex Agents</b></td><td><span class="mono">AUTO_FINANCE_AGENT</span> plans each question and calls Cortex Analyst</td><td><a href="https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents">Cortex Agents</a></td></tr>
+              <tr><td><b>AI_COMPLETE</b></td><td>Collector call summaries and dealer narratives with structured output, grounded only in the account's or dealer's figures</td><td><a href="https://docs.snowflake.com/en/sql-reference/functions/ai_complete">AI_COMPLETE</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="start">
+      <div class="wrap">
+        <div class="eyebrow">Get started</div>
+        <h2>Explore in your browser, then run it live</h2>
+        <div class="start-grid">
+          <div class="panel">
+            <h3>1 · No account needed</h3>
+            <p class="muted">Open the <a href="./try/">hosted example</a>, or run it locally on the bundled synthetic data:</p>
+            <pre>git clone https://github.com/sfc-gh-ooral/sfguide-auto-finance-portfolio-analytics
+cd sfguide-auto-finance-portfolio-analytics
+npm install &amp;&amp; npm run dev</pre>
+          </div>
+          <div class="panel">
+            <h3>2 · Live mode on your account</h3>
+            <ol class="muted">
+              <li>Run <span class="mono">sql/setup.sql</span> top to bottom in a Snowsight worksheet (about a minute on XSMALL).</li>
+              <li>Create a key pair and copy <span class="mono">.env.example</span> to <span class="mono">.env.local</span>.</li>
+              <li>Restart with <span class="mono">npm run dev</span> and switch the header to <b>Live</b>.</li>
+              <li>When you're done, run <span class="mono">sql/cleanup.sql</span>.</li>
+            </ol>
+            <p><a href="https://github.com/sfc-gh-ooral/sfguide-auto-finance-portfolio-analytics#live-mode-deploy-to-your-account">Full steps, objects created, and cost in the README →</a></p>
+          </div>
+          <div class="panel">
+            <h3>3 · Make it yours with Cortex Code</h3>
+            <ul class="muted">
+              <li>&ldquo;Map my loan and payment tables to the CONTRACTS and PAYMENTS_MONTHLY shapes as views. Don't change any source objects.&rdquo;</li>
+              <li>&ldquo;Add our roll-rate and charge-off definitions to the semantic view, then generate verified queries and run the eval.&rdquo;</li>
+              <li>&ldquo;Replace the roll-risk points with our collections segmentation, and show me the SQL before you deploy it.&rdquo;</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div><strong>Owner:</strong> Oz Oral · <strong>Last reviewed:</strong> November 2026 · <a href="https://github.com/sfc-gh-ooral/sfguide-auto-finance-portfolio-analytics/blob/main/LICENSE">Apache 2.0</a></div>
+      <div>This is an illustrative example provided as-is. It is not an official Snowflake product and is not supported by Snowflake Support. All data is synthetic; review and test before any production use. Results quoted on this page are from this synthetic data set.</div>
+    </div>
+  </footer>
+</body>
+</html>

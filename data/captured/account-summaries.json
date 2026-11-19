@@ -1,0 +1,66 @@
+{
+ "53529": {
+  "headline": "Daniel Baker, Contract 53529: 60-89 days past due, high roll risk",
+  "bullets": [
+   "Account is 60-89 days past due with approximately 2 monthly payments totaling $978 outstanding since becoming delinquent in September 2026.",
+   "Highest roll-risk score of 91 driven by current delinquency status, origination FICO below 580, high loan-to-value of 128%, and short 4-month payment history.",
+   "Consider requesting a promise to pay $978 to bring the account current and prevent further delinquency progression."
+  ]
+ },
+ "211728": {
+  "headline": "Carlos Campbell: 60-89 days past due, high roll risk",
+  "bullets": [
+   "Account is 60-89 days past due with approximately 2 monthly payments ($402.67 each) outstanding on a used-vehicle loan with 5 months on book.",
+   "High roll-risk score of 87 driven by current delinquency status, FICO band 580-619, 125% loan-to-value ratio, and 84-month term.",
+   "Consider requesting a promise to pay $805.34 to bring the account current and prevent further delinquency."
+  ]
+ },
+ "523193": {
+  "headline": "Derek White: 60-89 days past due, 2 payments overdue",
+  "bullets": [
+   "Account is 60-89 days past due with approximately 2 monthly payments of $229.17 outstanding on a used-vehicle loan.",
+   "High roll-risk driven by delinquency status, low credit score at origination, high loan-to-value ratio, long loan term, and early default.",
+   "Consider requesting a promise to pay $458.34 to bring the account current."
+  ]
+ },
+ "674612": {
+  "headline": "Robert Brown: 60-89 DPD, 2 payments overdue, high roll risk",
+  "bullets": [
+   "Account is 60-89 days past due with approximately 2 monthly payments ($232.47 each) outstanding on a used-vehicle loan with current balance of $18,132.99.",
+   "High roll-risk score of 87 driven by current delinquency status, FICO band 580-619, high LTV of 124%, long 84-month term, and short 6-month tenure.",
+   "Consider requesting a promise to pay at least one full monthly payment of $232.47 to prevent further delinquency progression."
+  ]
+ },
+ "781384": {
+  "headline": "Crystal Allen: 60-89 days past due, high roll risk",
+  "bullets": [
+   "Account is 60-89 days past due with approximately 2 monthly payments of $287.69 outstanding on a used-vehicle loan with a balance of $22,727.82.",
+   "High roll-risk score of 87 driven by delinquency status, FICO band 580-619, high loan-to-value of 131%, long 84-month term, and early stage on book.",
+   "Consider requesting a promise to pay $575.38 to bring the account current."
+  ]
+ },
+ "804095": {
+  "headline": "Luis Rodriguez: 60-89 days past due, two payments overdue",
+  "bullets": [
+   "Account is 60-89 days past due with approximately two monthly payments ($372.03 each) outstanding on a used-vehicle loan with six months payment history.",
+   "High roll-risk score of 87 driven by delinquency status, origination FICO band 580-619, 125% loan-to-value ratio, 84-month term, and short time on book.",
+   "Consider requesting a promise to pay $744.06 to bring the account current and prevent further delinquency."
+  ]
+ },
+ "930904": {
+  "headline": "Patricia Taylor: 60-89 days past due, high roll risk",
+  "bullets": [
+   "Account is 60-89 days past due with approximately 2 monthly payments ($940.98) outstanding on a used-vehicle loan.",
+   "High roll-risk score of 87 driven by delinquency status, FICO band 580-619, high LTV of 122%, long 84-month term, and early stage (4 months on book).",
+   "Consider requesting a promise to pay $940.98 to bring the account current."
+  ]
+ },
+ "1010765": {
+  "headline": "Omar Clark: 60-89 days past due, 2 payments overdue",
+  "bullets": [
+   "Account is 60-89 days past due with approximately 2 monthly payments of $562.14 outstanding on a used-vehicle loan with current balance of $45,533.72.",
+   "High roll-risk score of 87 driven by delinquency status, FICO band 580-619, high LTV of 134%, and short 3-month payment history.",
+   "Request promise to pay at least $1,124.28 to bring account current and prevent further delinquency."
+  ]
+ }
+}

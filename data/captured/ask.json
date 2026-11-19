@@ -1,0 +1,456 @@
+[
+ {
+  "question": "What is the 30+ DPD rate by FICO band last month?",
+  "text": "Here is the 30+ DPD rate by FICO band for October 2026, at month-end. The rate is the share of open contracts that were 30 or more days past due.\n\n| FICO band | 30+ DPD contracts | Open contracts | 30+ DPD rate |\n|---|---|---|---|\n| <580 | 746 | 12,665 | 5.9% |\n| 580-619 | 3,972 | 39,511 | 10.1% |\n| 620-679 | 2,122 | 105,044 | 2.0% |\n| 680-739 | 1,462 | 137,530 | 1.1% |\n| 740+ | 571 | 130,979 | 0.4% |\n\n- **Across all bands**, the rate was 2.1% (8,873 of 425,729 open contracts).\n- **The 580-619 band has the highest rate, at 10.1%.** That's even higher than the <580 band (5.9%). It's the one result that doesn't follow the usual pattern, so it may be worth a closer look.\n- **From 620 up**, the rate falls steadily as FICO goes up, down to 0.4% for 740+.\n\nThe saved query for this question didn't run because it uses a FICO band column that isn't in the data model. I used each contract's FICO band at origination instead. The data is synthetic.",
+  "sql": "WITH __payments AS (\n  SELECT\n    snapshot_month,\n    contract_id,\n    IFF(is_dpd30, 1, 0) AS dpd30_flag,\n    IFF(status_code < 4, 1, 0) AS open_flag\n  FROM AUTO_FINANCE_EXAMPLE.LENDING.PAYMENTS_MONTHLY\n), __contracts AS (\n  SELECT\n    fico_band AS contract_fico_band,\n    contract_id\n  FROM AUTO_FINANCE_EXAMPLE.LENDING.CONTRACTS\n)\nSELECT\n  c.contract_fico_band,\n  SUM(p.dpd30_flag) AS dpd30_contracts,\n  SUM(p.open_flag) AS open_contracts,\n  SUM(p.dpd30_flag) / NULLIF(NULLIF(SUM(p.open_flag), 0), 0) AS dpd30_rate\nFROM __payments AS p\nJOIN __contracts AS c\n  ON p.contract_id = c.contract_id\nWHERE\n  p.snapshot_month = '2026-10-01'\nGROUP BY\n  c.contract_fico_band\nORDER BY\n  c.contract_fico_band",
+  "verifiedQueryUsed": false,
+  "result": {
+   "columns": [
+    "CONTRACT_FICO_BAND",
+    "DPD30_CONTRACTS",
+    "OPEN_CONTRACTS",
+    "DPD30_RATE"
+   ],
+   "rows": [
+    [
+     "580-619",
+     "3972",
+     "39511",
+     "0.100529"
+    ],
+    [
+     "620-679",
+     "2122",
+     "105044",
+     "0.020201"
+    ],
+    [
+     "680-739",
+     "1462",
+     "137530",
+     "0.010630"
+    ],
+    [
+     "740+",
+     "571",
+     "130979",
+     "0.004359"
+    ],
+    [
+     "<580",
+     "746",
+     "12665",
+     "0.058902"
+    ]
+   ]
+  },
+  "source": "sample"
+ },
+ {
+  "question": "Show the 30+ DPD rate by month for the 580-619 FICO band",
+  "text": "For the 580-619 FICO band, the 30+ DPD rate has gone from 2.1% in December 2024 to 10.1% in October 2026. That's almost five times higher. The rate here is 30+ DPD accounts divided by open accounts in each monthly snapshot.\n\n- **2025:** The rate rose to a peak of 4.6% in July, then dropped back to about 4.0% from September to November.\n- **2026:** It has gone up every month, from 4.8% in January to 10.1% in October. It is rising faster: the increase was about 0.5 points a month early in the year and about 0.6–0.9 points a month since June.\n\n\n\n\n\nThe data is synthetic.",
+  "sql": "WITH __payments AS (\n  SELECT\n    snapshot_month,\n    contract_id,\n    IFF(is_dpd30, 1, 0) AS dpd30_flag,\n    IFF(status_code < 4, 1, 0) AS open_flag\n  FROM AUTO_FINANCE_EXAMPLE.LENDING.PAYMENTS_MONTHLY\n), __contracts AS (\n  SELECT\n    fico_band AS contract_fico_band,\n    contract_id\n  FROM AUTO_FINANCE_EXAMPLE.LENDING.CONTRACTS\n)\nSELECT\n  p.snapshot_month,\n  SUM(p.dpd30_flag) / NULLIF(NULLIF(SUM(p.open_flag), 0), 0) AS dpd30_rate\nFROM __payments AS p\nJOIN __contracts AS c\n  ON p.contract_id = c.contract_id\nWHERE\n  c.contract_fico_band = '580-619'\nGROUP BY\n  p.snapshot_month\nORDER BY\n  p.snapshot_month",
+  "verifiedQueryUsed": true,
+  "result": {
+   "columns": [
+    "SNAPSHOT_MONTH",
+    "DPD30_RATE"
+   ],
+   "rows": [
+    [
+     "2024-12-01",
+     "0.021295"
+    ],
+    [
+     "2025-01-01",
+     "0.030315"
+    ],
+    [
+     "2025-02-01",
+     "0.033823"
+    ],
+    [
+     "2025-03-01",
+     "0.039961"
+    ],
+    [
+     "2025-04-01",
+     "0.040439"
+    ],
+    [
+     "2025-05-01",
+     "0.043944"
+    ],
+    [
+     "2025-06-01",
+     "0.043963"
+    ],
+    [
+     "2025-07-01",
+     "0.046418"
+    ],
+    [
+     "2025-08-01",
+     "0.044235"
+    ],
+    [
+     "2025-09-01",
+     "0.039959"
+    ],
+    [
+     "2025-10-01",
+     "0.039978"
+    ],
+    [
+     "2025-11-01",
+     "0.040105"
+    ],
+    [
+     "2025-12-01",
+     "0.042948"
+    ],
+    [
+     "2026-01-01",
+     "0.047886"
+    ],
+    [
+     "2026-02-01",
+     "0.053951"
+    ],
+    [
+     "2026-03-01",
+     "0.058469"
+    ],
+    [
+     "2026-04-01",
+     "0.065213"
+    ],
+    [
+     "2026-05-01",
+     "0.068397"
+    ],
+    [
+     "2026-06-01",
+     "0.072850"
+    ],
+    [
+     "2026-07-01",
+     "0.080633"
+    ],
+    [
+     "2026-08-01",
+     "0.086307"
+    ],
+    [
+     "2026-09-01",
+     "0.091832"
+    ],
+    [
+     "2026-10-01",
+     "0.100529"
+    ]
+   ]
+  },
+  "source": "sample"
+ },
+ {
+  "question": "What are total charge-offs by vintage quarter?",
+  "text": "Total charge-offs come to **$243,556,655.05** across the eight vintage quarters from Q4 2024 through Q3 2026.\n\n\n\n\n\n- **Q1 2025 has the most charge-offs** at $52,791,703.85. The Q2 and Q3 2025 vintages are close behind at about $45M each.\n- **Recent quarters are low mostly because those loans are new.** Newer loans have had less time to default, so this doesn't necessarily mean their credit is better. Q2 2026 is about $3.0M and Q3 2026 has none yet.\n- These are dollar totals and aren't adjusted for how much was lent in each quarter. To compare quarters fairly, you'd need charge-offs as a percentage of the amount lent.\n\nThe data is synthetic.",
+  "sql": "WITH __payments AS (\n  SELECT\n    contract_id,\n    charge_off_amount AS charged_off\n  FROM AUTO_FINANCE_EXAMPLE.LENDING.PAYMENTS_MONTHLY\n), __contracts AS (\n  SELECT\n    vintage_quarter,\n    contract_id\n  FROM AUTO_FINANCE_EXAMPLE.LENDING.CONTRACTS\n)\nSELECT\n  c.vintage_quarter,\n  SUM(p.charged_off) AS total_charge_offs\nFROM __payments AS p\nJOIN __contracts AS c\n  ON p.contract_id = c.contract_id\nGROUP BY\n  c.vintage_quarter\nORDER BY\n  c.vintage_quarter",
+  "verifiedQueryUsed": true,
+  "result": {
+   "columns": [
+    "VINTAGE_QUARTER",
+    "TOTAL_CHARGE_OFFS"
+   ],
+   "rows": [
+    [
+     "2024-11-01",
+     "39177957.23"
+    ],
+    [
+     "2025-02-01",
+     "52791703.85"
+    ],
+    [
+     "2025-05-01",
+     "45249959.77"
+    ],
+    [
+     "2025-08-01",
+     "44888637.64"
+    ],
+    [
+     "2025-11-01",
+     "38064866.10"
+    ],
+    [
+     "2026-02-01",
+     "20345338.47"
+    ],
+    [
+     "2026-05-01",
+     "3038191.99"
+    ],
+    [
+     "2026-08-01",
+     "0.00"
+    ]
+   ]
+  },
+  "source": "sample"
+ },
+ {
+  "question": "Which dealers have the highest first-payment default rate in 2026?",
+  "text": "Harbor Pre-Owned has by far the highest first-payment default rate in 2026, at **22.9%** (205 contracts). That's about four times the next-highest dealer.\n\n**Period and scope:** contracts funded January–September 2026, limited to dealers with at least 100 contracts.\n\n- **Next highest:** First Lakeshore Car Center is second at 5.7%. North Northgate Motors (5.3%) and United Evergreen Motors (5.1%) follow.\n- **The rest of the top 10** are close together, between 4.7% and 4.9%. The differences among them are probably too small to matter.\n- **Harbor Pre-Owned stands out** and is worth looking into first, for example its credit mix or possible fraud and stipulation issues.",
+  "sql": "WITH __contracts AS (\n  SELECT\n    funded_month,\n    contract_id,\n    dealer_id,\n    IFF(is_first_payment_default, 1, 0) AS fpd_flag\n  FROM AUTO_FINANCE_EXAMPLE.LENDING.CONTRACTS\n), __dealers AS (\n  SELECT\n    dealer_name,\n    dealer_id\n  FROM AUTO_FINANCE_EXAMPLE.LENDING.DEALERS\n)\nSELECT\n  d.dealer_name,\n  COUNT(*) AS contracts,\n  SUM(c.fpd_flag) / NULLIF(COUNT(*), 0) AS first_payment_default_rate\nFROM __contracts AS c\nJOIN __dealers AS d\n  ON c.dealer_id = d.dealer_id\nWHERE\n  c.funded_month BETWEEN '2026-01-01' AND '2026-09-01'\nGROUP BY\n  d.dealer_name\nHAVING\n  COUNT(*) >= 100\nORDER BY\n  first_payment_default_rate DESC\nLIMIT 10",
+  "verifiedQueryUsed": true,
+  "result": {
+   "columns": [
+    "DEALER_NAME",
+    "CONTRACTS",
+    "FIRST_PAYMENT_DEFAULT_RATE"
+   ],
+   "rows": [
+    [
+     "Harbor Pre-Owned",
+     "205",
+     "0.229268"
+    ],
+    [
+     "First Lakeshore Car Center",
+     "122",
+     "0.057377"
+    ],
+    [
+     "North Northgate Motors",
+     "152",
+     "0.052632"
+    ],
+    [
+     "United Evergreen Motors",
+     "118",
+     "0.050847"
+    ],
+    [
+     "North Foxhill Car Center",
+     "123",
+     "0.048780"
+    ],
+    [
+     "Metro Foxhill Auto Group",
+     "124",
+     "0.048387"
+    ],
+    [
+     "Premier Willow Bend Motors",
+     "166",
+     "0.048193"
+    ],
+    [
+     "Eastport Motor Co.",
+     "187",
+     "0.048128"
+    ],
+    [
+     "First Parkside Motors",
+     "105",
+     "0.047619"
+    ],
+    [
+     "Great Lakes Automotive",
+     "148",
+     "0.047297"
+    ]
+   ]
+  },
+  "source": "sample"
+ },
+ {
+  "question": "What is the monthly decline rate for Sunbelt Motors Group?",
+  "text": "Sunbelt Motors Group's monthly decline rate went up a lot over the last two years. The figures below run from November 2024 to October 2026.\n\n- **Nov 2024 – Mar 2026:** The rate mostly stayed between 29.6% and 35.8%. The one exception was the first month, November 2024, at 39.1%.\n- **Apr – Oct 2026:** It jumped above 40% and stayed mostly between 40.8% and 45.0%. The peak was 45.0% in September 2026, and August was the only lower month at 38.5%.\n- **Latest month (Oct 2026):** 42.1%, up from 33.2% in October 2025.\n\n\n\n\n\nThe decline rate is 1 minus the share of applications approved. The data is synthetic.",
+  "sql": "WITH __applications AS (\n  SELECT\n    app_month AS application_month,\n    decision,\n    dealer_id,\n    IFF(decision = 'APPROVED', 1, 0) AS approved_flag\n  FROM AUTO_FINANCE_EXAMPLE.LENDING.APPLICATIONS\n), __dealers AS (\n  SELECT\n    dealer_name,\n    dealer_id\n  FROM AUTO_FINANCE_EXAMPLE.LENDING.DEALERS\n)\nSELECT\n  a.application_month,\n  1 - SUM(a.approved_flag) / NULLIF(COUNT(*), 0) AS decline_rate\nFROM __applications AS a\nJOIN __dealers AS d\n  ON a.dealer_id = d.dealer_id\nWHERE\n  d.dealer_name = 'Sunbelt Motors Group'\nGROUP BY\n  a.application_month\nORDER BY\n  a.application_month",
+  "verifiedQueryUsed": true,
+  "result": {
+   "columns": [
+    "APPLICATION_MONTH",
+    "DECLINE_RATE"
+   ],
+   "rows": [
+    [
+     "2024-11-01",
+     "0.391304"
+    ],
+    [
+     "2024-12-01",
+     "0.302083"
+    ],
+    [
+     "2025-01-01",
+     "0.299492"
+    ],
+    [
+     "2025-02-01",
+     "0.321244"
+    ],
+    [
+     "2025-03-01",
+     "0.296804"
+    ],
+    [
+     "2025-04-01",
+     "0.316742"
+    ],
+    [
+     "2025-05-01",
+     "0.314815"
+    ],
+    [
+     "2025-06-01",
+     "0.315068"
+    ],
+    [
+     "2025-07-01",
+     "0.328358"
+    ],
+    [
+     "2025-08-01",
+     "0.313492"
+    ],
+    [
+     "2025-09-01",
+     "0.327354"
+    ],
+    [
+     "2025-10-01",
+     "0.331839"
+    ],
+    [
+     "2025-11-01",
+     "0.309623"
+    ],
+    [
+     "2025-12-01",
+     "0.296296"
+    ],
+    [
+     "2026-01-01",
+     "0.357143"
+    ],
+    [
+     "2026-02-01",
+     "0.358079"
+    ],
+    [
+     "2026-03-01",
+     "0.349206"
+    ],
+    [
+     "2026-04-01",
+     "0.410646"
+    ],
+    [
+     "2026-05-01",
+     "0.407942"
+    ],
+    [
+     "2026-06-01",
+     "0.433898"
+    ],
+    [
+     "2026-07-01",
+     "0.445455"
+    ],
+    [
+     "2026-08-01",
+     "0.384840"
+    ],
+    [
+     "2026-09-01",
+     "0.450479"
+    ],
+    [
+     "2026-10-01",
+     "0.420896"
+    ]
+   ]
+  },
+  "source": "sample"
+ },
+ {
+  "question": "How does look-to-book compare on weekends versus weekdays?",
+  "text": "Look-to-book (funded deals as a share of approved applications) is much lower on weekends. This covers all applications in the data.\n\n- **Weekdays:** 63.0%\n- **Weekends:** 41.0%\n\nThat's a gap of about 22 percentage points. Roughly 4 in 10 weekend approvals get funded, compared with more than 6 in 10 on weekdays.",
+  "sql": "WITH __applications AS (\n  SELECT\n    decision,\n    is_weekend,\n    IFF(decision = 'APPROVED', 1, 0) AS approved_flag,\n    IFF(is_funded, 1, 0) AS funded_flag\n  FROM AUTO_FINANCE_EXAMPLE.LENDING.APPLICATIONS\n)\nSELECT\n  is_weekend,\n  SUM(funded_flag) / NULLIF(NULLIF(SUM(approved_flag), 0), 0) AS look_to_book_rate\nFROM __applications\nGROUP BY\n  is_weekend",
+  "verifiedQueryUsed": true,
+  "result": {
+   "columns": [
+    "IS_WEEKEND",
+    "LOOK_TO_BOOK_RATE"
+   ],
+   "rows": [
+    [
+     "false",
+     "0.630175"
+    ],
+    [
+     "true",
+     "0.410204"
+    ]
+   ]
+  },
+  "source": "sample"
+ },
+ {
+  "question": "What is the average APR on funded contracts by loan term?",
+  "text": "From November 2024 to October 2026, the average APR on funded contracts is about **9.4% for every loan term**:\n\n- 36 months: 9.4% (45,912 contracts)\n- 48 months: 9.4% (64,186 contracts)\n- 60 months: 9.4% (129,063 contracts)\n- 72 months: 9.4% (157,118 contracts)\n- 84 months: 9.4% (64,145 contracts)\n\nThe spread between terms is less than 0.02 points. In real lending, longer loans usually carry higher rates, so the flat pattern likely comes from how this synthetic data was generated. Most funded loans are 60 or 72 months.",
+  "sql": "WITH __applications AS (\n  SELECT\n    app_month AS application_month,\n    term_months AS term,\n    apr AS apr_pct,\n    IFF(is_funded, 1, 0) AS funded_flag\n  FROM AUTO_FINANCE_EXAMPLE.LENDING.APPLICATIONS\n)\nSELECT\n  term,\n  AVG(apr_pct) AS avg_apr_pct,\n  SUM(funded_flag) AS funded_contracts,\n  MIN(application_month) AS start_month,\n  MAX(application_month) AS end_month\nFROM __applications\nWHERE\n  funded_flag = 1\nGROUP BY\n  term\nORDER BY\n  term",
+  "verifiedQueryUsed": false,
+  "result": {
+   "columns": [
+    "TERM",
+    "AVG_APR_PCT",
+    "FUNDED_CONTRACTS",
+    "START_MONTH",
+    "END_MONTH"
+   ],
+   "rows": [
+    [
+     "36",
+     "9.35121406",
+     "45912",
+     "2024-11-01",
+     "2026-10-01"
+    ],
+    [
+     "48",
+     "9.36402019",
+     "64186",
+     "2024-11-01",
+     "2026-10-01"
+    ],
+    [
+     "60",
+     "9.36022586",
+     "129063",
+     "2024-11-01",
+     "2026-10-01"
+    ],
+    [
+     "72",
+     "9.35636464",
+     "157118",
+     "2024-11-01",
+     "2026-10-01"
+    ],
+    [
+     "84",
+     "9.36714865",
+     "64145",
+     "2024-11-01",
+     "2026-10-01"
+    ]
+   ]
+  },
+  "source": "sample"
+ }
+]
