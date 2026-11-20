@@ -28,7 +28,7 @@ export default function CollectionsQueue() {
         subtitle="Accounts 30 to 89 days past due at the October 2026 month-end, ranked by a transparent roll-risk score: days past due, credit band, LTV, term, and loan age. Open an account for an AI call summary, then assign a collector or record a promise to pay."
         right={<div className="flex flex-wrap gap-2"><Powered>COLLECTIONS_QUEUE view</Powered><Powered>AI_COMPLETE</Powered></div>} />
 
-      <section className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 stagger">
+      <section className="grid grid-cols-2 xl:grid-cols-4 gap-4 stagger">
         {[
           ['Accounts in queue', data ? fmtInt(data.queueSize) : '…', 'All 30-89 DPD accounts, Oct 2026'],
           ['Shown below', data ? fmtInt(acc.length) : '…', 'Highest roll-risk first'],

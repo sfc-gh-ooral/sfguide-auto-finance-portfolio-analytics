@@ -43,15 +43,15 @@ export default function Overview() {
               <Link href="/collections" className="btn" style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', borderColor: 'rgba(255,255,255,0.18)' }}>Work the collections queue</Link>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             {[
               { label: 'Funded contracts, 24 months', v: a ? a.monthly.reduce((s, m) => s + m.funded, 0) : 0, f: (n: number) => fmtInt(n), icon: CarFront },
               { label: 'Open balance, Oct 2026', v: k?.balanceUsd.value ?? 0, f: (n: number) => fmtUsd(n), icon: Landmark },
               { label: 'Accounts in the collections queue', v: a?.queueSize ?? 0, f: (n: number) => fmtInt(n), icon: CalendarClock },
             ].map(({ label, v, f, icon: Icon }) => (
-              <div key={label} className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div key={label} className="min-w-0 rounded-2xl p-3 sm:p-4" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
                 <Icon className="w-4 h-4 mb-3" style={{ color: '#9BDB3E' }} aria-hidden />
-                <div className="text-2xl font-bold text-white tabular-nums">{a ? <CountUp value={v} format={f} /> : '…'}</div>
+                <div className="text-base sm:text-2xl font-bold text-white tabular-nums">{a ? <CountUp value={v} format={f} /> : '…'}</div>
                 <div className="text-[11px] mt-1 leading-snug" style={{ color: '#9DB9B1' }}>{label}</div>
               </div>
             ))}
@@ -60,13 +60,13 @@ export default function Overview() {
         </div>
       </section>
 
-      {!k ? <div className="grid sm:grid-cols-2 xl:grid-cols-6 gap-4">{Array.from({ length: 6 }, (_, i) => <Skeleton key={i} h={118} />)}</div> : (
+      {!k ? <div className="grid grid-cols-2 xl:grid-cols-6 gap-4">{Array.from({ length: 6 }, (_, i) => <Skeleton key={i} h={118} />)}</div> : (
         <section aria-label={`Key metrics, ${fmtMonthLong(k.month)}`}>
           <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
             <h2 className="text-lg font-bold">{fmtMonthLong(k.month)} at a glance</h2>
             <Powered>Semantic View AUTO_FINANCE_SV</Powered>
           </div>
-          <div className="grid sm:grid-cols-2 xl:grid-cols-6 gap-4 stagger">
+          <div className="grid grid-cols-2 xl:grid-cols-6 gap-4 stagger">
             <Kpi label="Funded volume" value={k.fundedUsd.value} format={(n) => fmtUsd(n)} delta={k.fundedUsd.delta} deltaFormat={(d) => fmtPct(Math.abs(d))} icon={<BadgeDollarSign className="w-4 h-4" />} accent="var(--good)" />
             <Kpi label="Open balance" value={k.balanceUsd.value} format={(n) => fmtUsd(n)} delta={k.balanceUsd.delta} deltaFormat={(d) => fmtPct(Math.abs(d))} icon={<Landmark className="w-4 h-4" />} accent="var(--sky)" />
             <Kpi label="Average APR (yield)" value={k.apr.value} format={(n) => `${n.toFixed(2)}%`} delta={k.apr.delta / 100} deltaFormat={(d) => pts(d, 2)} icon={<Percent className="w-4 h-4" />} accent="var(--indigo)" />

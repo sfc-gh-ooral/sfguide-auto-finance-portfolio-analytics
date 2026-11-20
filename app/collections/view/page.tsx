@@ -49,10 +49,10 @@ function Detail({ a, collectors }: { a: Account; collectors: string[] }) {
               <span>Funded {a.fundedMonth} via <Link href={`/dealers/view?id=${a.dealerId}`} className="underline underline-offset-2">{a.dealer}</Link></span>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             {[['Balance', `$${fmtInt(a.balance)}`], ['Past due (approx.)', `$${fmtInt(pastDue)}`], ['Roll-risk score', `${a.score} of 91`]].map(([l, v]) => (
-              <div key={l} className="rounded-2xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <div className="text-xl font-bold text-white tabular-nums">{v}</div><div className="text-[11px]" style={{ color: '#9DB9B1' }}>{l}</div>
+              <div key={l} className="min-w-0 rounded-2xl px-3 sm:px-4 py-3" style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div className="text-base sm:text-xl font-bold text-white tabular-nums">{v}</div><div className="text-[11px]" style={{ color: '#9DB9B1' }}>{l}</div>
               </div>
             ))}
           </div>

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CarFront, Gauge, Headset, LayoutGrid, LineChart, Menu, MessageSquareText, Moon, Sun, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ModeChip } from './ModeChip';
 import { HOSTED_EXAMPLE, REPO } from '@/lib/hosted';
@@ -37,10 +37,22 @@ export function Shell({ children }: { children: ReactNode }) {
   const { dark, toggle } = useTheme();
   const active = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
   useEffect(() => setOpen(false), [path]);
+  const menuBtn = useRef<HTMLButtonElement>(null);
+  const asideRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    // Wait out the slide-in transition: links stay visibility:hidden until it ends.
+    const t = setTimeout(() => asideRef.current?.querySelector<HTMLElement>('nav a')?.focus(), 200);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setOpen(false); menuBtn.current?.focus(); }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => { clearTimeout(t); document.removeEventListener('keydown', onKey); };
+  }, [open]);
 
   return (
     <div className="min-h-screen flex">
-      <aside className={`fixed inset-y-0 left-0 z-40 w-[260px] flex flex-col transition-transform lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}
+      <aside id="app-nav" ref={asideRef} className={`fixed inset-y-0 left-0 z-40 w-[260px] max-w-[85vw] overflow-y-auto flex flex-col transition-transform lg:translate-x-0 lg:visible ${open ? 'translate-x-0' : '-translate-x-full invisible'}`}
         style={{ background: 'var(--grad-ink)', color: '#DCEBE6' }}>
         <div className="px-5 pt-6 pb-5">
           <Link href="/" className="flex items-center gap-3">
@@ -79,7 +91,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <div className="flex-1 lg:ml-[260px] min-w-0">
         <header className="sticky top-0 z-20 glass border-b" style={{ borderColor: 'var(--border)' }}>
           <div className="px-4 sm:px-8 py-2.5 flex items-center gap-3">
-            <button className="lg:hidden btn !p-2" onClick={() => setOpen((o) => !o)} aria-label="Open navigation">{open ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}</button>
+            <button ref={menuBtn} className="lg:hidden btn !p-2" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="app-nav" aria-label={open ? 'Close navigation' : 'Open navigation'}>{open ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}</button>
             <p className="flex-1 text-xs truncate" style={{ color: 'var(--text-3)' }}>
               {HOSTED_EXAMPLE
                 ? <><strong style={{ color: 'var(--text)' }}>Hosted example, Sample mode.</strong> Runs in your browser on synthetic data; AI answers are captured samples.</>

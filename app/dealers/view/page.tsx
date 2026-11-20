@@ -61,10 +61,10 @@ function DealerDetail({ d }: { d: Dealer }) {
               <span>{d.type} · since {d.onboarded.slice(0, 4)}</span>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             {[['Funded volume', fmtUsd(last12(d.fundedCents) / 100)], ['FPD rate, 2026', fmtPct(fpd26)], ['Target attainment', fmtPct(attainment, 0)]].map(([l, v]) => (
-              <div key={l} className="rounded-2xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <div className="text-xl font-bold text-white tabular-nums">{v}</div><div className="text-[11px]" style={{ color: '#9DB9B1' }}>{l}</div>
+              <div key={l} className="min-w-0 rounded-2xl px-3 sm:px-4 py-3" style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div className="text-base sm:text-xl font-bold text-white tabular-nums">{v}</div><div className="text-[11px]" style={{ color: '#9DB9B1' }}>{l}</div>
               </div>
             ))}
           </div>
